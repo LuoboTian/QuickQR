@@ -38,7 +38,13 @@ bash scripts/test.sh
 
 ## 演示图
 
-真实 App 截图待补：计划使用 `example.com` 演示生成、最近和收藏。当前桌面截图工具超时，尚未取得可核验且无隐私内容的图片；不使用模拟图冒充已完成界面。完成截图后将使用仓库内相对路径展示。
+以下为本机运行的真实 App 截图；二维码演示使用 `example.com`，截图未包含桌面或私密网址。
+
+| 生成 | 最近 | 收藏 |
+| --- | --- | --- |
+| <img src="docs/images/generate.png" alt="QuickQR 生成公开示例网址的二维码" width="260"> | <img src="docs/images/recent.png" alt="QuickQR 本次运行最近生成列表" width="260"> | <img src="docs/images/favorites.png" alt="QuickQR 命名收藏列表" width="260"> |
+
+已验证手动生成、空输入提示、显式剪贴板、最近清空、命名收藏与重新生成、删除确认取消、Esc 后重新打开。最近 10 条上限与持久化删除由自动测试覆盖。Services 在 TextEdit 中可发现，但完整菜单触发链路仍待验收，不宣称任意 App 都支持。
 
 ## 最近生成与收藏
 

@@ -1,5 +1,9 @@
 import AppKit
 
+final class FlippedStackView: NSStackView {
+    override var isFlipped: Bool { true }
+}
+
 final class PayloadButton: NSButton {
     var payload: String?
 }
@@ -226,7 +230,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let scroll = NSScrollView()
         scroll.hasVerticalScroller = true
         scroll.drawsBackground = false
-        let rows = NSStackView()
+        let rows = FlippedStackView()
         rows.orientation = .vertical
         rows.alignment = .leading
         rows.spacing = 8
