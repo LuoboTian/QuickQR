@@ -18,3 +18,5 @@ assert service['NSMessage'] == 'generateQRCode'
 assert 'public.utf8-plain-text' in service['NSSendTypes']
 print('PASS: Services declaration/menu visibility regression checks')
 PYTEST
+xcrun swiftc -swift-version 5 -module-cache-path "$cache" Sources/WindowHost.swift Tests/Window/main.swift -o build/window-tests
+build/window-tests

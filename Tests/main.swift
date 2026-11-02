@@ -9,7 +9,7 @@ func require(_ condition: Bool, _ message: String) {
 for value: String? in [nil, "", " \n\t", String(repeating: "x", count: 2001), String(repeating: "中", count: 667)] {
     do { _ = try QRCode.make(value); fatalError("Expected input rejection") } catch { checks += 1 }
 }
-for value in ["https://example.com/path?a=1&b=two#section", "https://example.com/%E4%B8%AD?q=a+b", "  text with spaces\n", "你好 QuickQR 👋", String(repeating: "a", count: 2000)] {
+for value in ["https://example.com/path?a=1&b=two#section", "https://example.com/%E4%B8%AD?q=a+b", "  text with spaces\n", "你好 QuickQR 👋", String(repeating: "a", count: 2000), "https://example.com/?q=" + String(repeating: "a", count: 1500)] {
     let qr = try QRCode.make(value)
     require(qr.width == qr.height, "Image must be square")
     let request = VNDetectBarcodesRequest()
@@ -17,7 +17,7 @@ for value in ["https://example.com/path?a=1&b=two#section", "https://example.com
     try VNImageRequestHandler(cgImage: qr).perform([request])
     require(request.results?.first?.payloadStringValue == value, "Round-trip mismatch")
 }
-print("PASS: \(checks) checks, including 5 Vision decode round-trips")
+print("PASS: \(checks) checks, including 6 Vision decode round-trips")
 
 let scratch = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 defer { try? FileManager.default.removeItem(at: scratch) }

@@ -8,13 +8,9 @@ final class PayloadButton: NSButton {
     var payload: String?
 }
 
-final class QRWindow: NSWindow {
-    override func cancelOperation(_ sender: Any?) { close() }
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var status: NSStatusItem!
-    private var window: QRWindow?
+    private let windowHost = WindowHost()
     private var library: QRLibrary?
     private var displayedText: String?
     private var selectedTab = 0
@@ -147,23 +143,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         show(pasteboard.string(forType: .string) ?? pasteboard.string(forType: .URL))
     }
 
-    private func makeWindow(title: String) -> QRWindow {
-        window?.close()
-        let result = QRWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
-                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        result.title = "QuickQR"
-        result.titlebarAppearsTransparent = true
-        let backdrop = NSVisualEffectView()
-        backdrop.material = .windowBackground
-        backdrop.blendingMode = .behindWindow
-        backdrop.state = .active
-        result.contentView = backdrop
-        result.isReleasedWhenClosed = false
-        result.center()
-        window = result
-        return result
-    }
-
     private func stack(in window: NSWindow) -> NSStackView {
         let stack = NSStackView()
         stack.orientation = .vertical
@@ -218,7 +197,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc private func clearList() { clearRecent(); showList() }
     private func showList() {
-        let w = makeWindow(title: "QuickQR")
+        let w = windowHost.prepare()
         let s = stack(in: w)
         let heading = NSTextField(labelWithString: selectedTab == 1 ? "最近生成" : "我的收藏")
         heading.font = .systemFont(ofSize: 20, weight: .semibold)
@@ -281,13 +260,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func activate(_ window: NSWindow) {
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        // All content/layout changes finish in this turn without implicit animation.
+        // In-app navigation must not repeatedly activate or raise the window.
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0
+            context.allowsImplicitAnimation = false
+            window.contentView?.layoutSubtreeIfNeeded()
+        }
+        if !NSApp.isActive { NSApp.activate(ignoringOtherApps: true) }
+        if !window.isVisible || !window.isKeyWindow { window.makeKeyAndOrderFront(nil) }
     }
 
     @objc func manualInput() {
         selectedTab = 0
-        let w = makeWindow(title: "QuickQR · 本地二维码")
+        let w = windowHost.prepare()
         let s = stack(in: w)
         let heading = NSTextField(labelWithString: "让手机，接住这段内容")
         heading.font = .systemFont(ofSize: 20, weight: .semibold)
@@ -336,15 +322,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             selectedTab = 0
             library?.generated(text!)
             refreshMenu()
-            let w = makeWindow(title: "QuickQR · 扫码")
+            let w = windowHost.prepare()
             let s = stack(in: w)
             let image = NSImageView()
             image.image = NSImage(cgImage: qr, size: NSSize(width: qr.width, height: qr.height))
             image.imageScaling = .scaleNone
+            image.wantsLayer = true
+            image.layer?.backgroundColor = NSColor.white.cgColor
             image.setAccessibilityLabel("二维码，编码内容见下方原文")
             s.addArrangedSubview(image)
-            image.widthAnchor.constraint(equalToConstant: CGFloat(qr.width)).isActive = true
-            image.heightAnchor.constraint(equalToConstant: CGFloat(qr.height)).isActive = true
+            image.widthAnchor.constraint(equalToConstant: 300).isActive = true
+            image.heightAnchor.constraint(equalToConstant: 300).isActive = true
             let scroll = NSScrollView()
             scroll.hasVerticalScroller = true
             let original = NSTextView(frame: NSRect(x: 0, y: 0, width: 392, height: 72))
